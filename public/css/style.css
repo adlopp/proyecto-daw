@@ -1,7 +1,7 @@
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #fdfdfd;
+  background-color: white;
 }
 
 .top-bar {
@@ -21,7 +21,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #fff;
+  background-color: white;
   font-weight: bold;
 }
 
@@ -32,7 +32,7 @@ body {
 }
 
 .slogan {
-  background-color: #eee;
+  background-color: white;
   padding: 8px 15px;
   border-radius: 5px;
   font-size: 14px;
@@ -40,7 +40,7 @@ body {
 }
 
 .login-btn {
-  background-color: #eee;
+  background-color: white;
   border: none;
   padding: 10px 14px;
   font-weight: bold;
@@ -62,7 +62,7 @@ body {
 }
 
 .login-form {
-  background-color: #fafafa;
+  background-color: white;
   border: 1px solid #ccc;
   padding: 40px 50px;
   border-radius: 10px;
@@ -99,7 +99,7 @@ body {
 }
 
 .register-btn:hover {
-  background-color: #cf6600;
+  background-color: #e77823;
 }
 
 @media (max-width: 768px) {
@@ -125,4 +125,62 @@ body {
   .login-container {
     margin-top: 40px;
   }
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  max-width: 1000px;
+  margin: auto;
+}
+
+.product-card {
+  background-color: rgb(250, 250, 250);
+  text-align: center;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.product-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid #999;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.logout {
+  background-color: white;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.logout:hover {
+  background-color: #ccc;
 }

@@ -37,14 +37,16 @@ document.getElementById('formulario').addEventListener('submit', async e => {
     if (res.ok) {
       if (isLogin) {
         alert('Inicio de sesión correcto');
-        // window.location.href = "productos.html";
+        // Guardoo el nombre de usuario en localStorage
+        localStorage.setItem('usuario', usuario);
+        window.location.href = 'productos.html';
       } else {
         alert('Usuario registrado con éxito');
       }
     } else {
       alert(data.mensaje || 'Ocurrió un error');
     }
-  } catch (error) {
+  } catch {
     alert('Error al conectar con el servidor');
   }
 });

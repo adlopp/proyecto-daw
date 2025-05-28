@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Productos</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<header class="top-bar">
+  <div class="logo">LOGO</div>
+
+  <div class="slogan-wrapper">
+    <div class="slogan" id="bienvenida">Bienvenido</div>
+  </div>
+
+  <div class="header-actions">
+    <div class="nav-buttons">
+      <button class="login-btn">Categorías</button>
+      <input class="search-input" type="text" placeholder="Buscar producto...">
+      <button class="login-btn">Perfil</button>
+      <button class="login-btn">Carrito</button>
+    </div>
+    <button class="login-btn logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</header>
+
+
+  <main>
+    <section class="product-grid" id="product-list"></section>
+  </main>
+
+  <script>
+    const nombreUsuario = localStorage.getItem('usuario');
+    if (!nombreUsuario) {
+      window.location.href = 'index.html';
+    } else {
+      document.getElementById('bienvenida').textContent = `Bienvenido, ${nombreUsuario}`;
+    }
+
+    function logout() {
+      localStorage.removeItem('usuario');
+      window.location.href = 'index.html';
+    }
+
+    async function cargarProductos() {
+      try {
+        const res = await fetch('/api/productos');
+        const productos = await res.json();
+        const contenedor = document.getElementById('product-list');
+
+        productos.forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'product-card';
+          card.innerHTML = `
+            <img src="${p.imagen}" alt="${p.nombre}" />
+            <p>${p.nombre}</p>
+          `;
+          contenedor.appendChild(card);
+        });
+      } catch {
+        alert('No se pudieron cargar los productos');
+      }
+    }
+
+    cargarProductos();
+  </script>
+</body>
+</html>
