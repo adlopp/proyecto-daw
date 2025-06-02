@@ -39,7 +39,8 @@ body {
   white-space: nowrap;
 }
 
-.login-btn {
+.login-btn,
+.logout {
   background-color: white;
   border: none;
   padding: 10px 14px;
@@ -50,7 +51,8 @@ body {
   white-space: nowrap;
 }
 
-.login-btn:hover {
+.login-btn:hover,
+.logout:hover {
   background-color: #ccc;
 }
 
@@ -99,7 +101,7 @@ body {
 }
 
 .register-btn:hover {
-  background-color: #e77823;
+  background-color: #cf6600;
 }
 
 @media (max-width: 768px) {
@@ -124,6 +126,16 @@ body {
 
   .login-container {
     margin-top: 40px;
+  }
+
+  .product-detail {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .detalle-info {
+    align-items: center;
   }
 }
 
@@ -172,15 +184,40 @@ body {
   font-size: 14px;
 }
 
-.logout {
-  background-color: white;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
+.product-detail {
+  max-width: 1000px;
+  margin: 40px auto;
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 20px;
 }
 
-.logout:hover {
-  background-color: #ccc;
+.detalle-img {
+  width: 350px;
+  height: auto;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid #ccc;
+}
+
+.detalle-info {
+  flex: 1;
+  min-width: 250px;
+}
+
+.detalle-info h2 {
+  margin-top: 0;
+}
+
+.detalle-info p {
+  margin: 10px 0;
+}
+
+#cantidad {
+  padding: 8px;
+  width: 60px;
+  margin-top: 5px;
 }

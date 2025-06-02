@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Detalle de producto</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="logo">LOGO</div>
+    <div class="slogan-wrapper"><div class="slogan" id="bienvenida">Bienvenido</div></div>
+    <div class="header-actions">
+      <div class="nav-buttons">
+
+        <button class="login-btn">Perfil</button>
+        <button class="login-btn">Carrito</button>
+      </div>
+      <button class="login-btn logout" onclick="logout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="product-detail" id="detalle-producto">
+    </section>
+  </main>
+
+  <script>
+    const usuario = localStorage.getItem('usuario');
+    if (!usuario) window.location.href = 'index.html';
+    document.getElementById('bienvenida').textContent = `Bienvenido, ${usuario}`;
+
+    function logout() {
+      localStorage.removeItem('usuario');
+      window.location.href = 'index.html';
+    }
+
+    async function cargarDetalle() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+
+      if (!id) {
+        alert('Producto no encontrado');
+        window.location.href = 'productos.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/productos/${id}`);
+        const p = await res.json();
+
+        const detalle = document.getElementById('detalle-producto');
+        detalle.innerHTML = `
+          <div class="detalle-container">
+            <img src="${p.imagen}" class="detalle-img" alt="${p.nombre}">
+            <div class="detalle-info">
+              <h2>${p.nombre}</h2>
+              <p><strong>Precio:</strong> ${p.precio}€</p>
+              <p><strong>Stock disponible:</strong> ${p.stock}</p>
+
+              <p><strong>Descripción:</strong> ${p.descripcion}</p>
+              <label for="cantidad"><strong>Cantidad:</strong></label>
+              <input id="cantidad" type="number" min="1" value="1" />
+              <br><br>
+              <button class="register-btn">Realizar pedido</button>
+            </div>
+          </div>
+        `;
+      } catch {
+        alert('No se pudo cargar el producto');
+      }
+    }
+
+    cargarDetalle();
+  </script>
+</body>
+</html>

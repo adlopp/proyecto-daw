@@ -53,7 +53,9 @@
           const card = document.createElement('div');
           card.className = 'product-card';
           card.innerHTML = `
-            <img src="${p.imagen}" alt="${p.nombre}" />
+            <a href="detalle.html?id=${p.id_producto}">
+              <img src="${p.imagen}" alt="${p.nombre}" />
+            </a>
             <p>${p.nombre}</p>
           `;
           contenedor.appendChild(card);
