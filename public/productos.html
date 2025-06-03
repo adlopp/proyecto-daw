@@ -15,7 +15,7 @@
 
     <div class="header-actions">
       <div class="nav-buttons">
-        <!-- Categorías desplegable -->
+
         <select id="categoria-select" class="login-btn">
           <option value="">Todas</option>
           <option value="Consolas">Consolas</option>
@@ -23,7 +23,7 @@
           <option value="Gráficas">Gráficas</option>
         </select>
 
-        <!-- Búsqueda -->
+
         <input id="busqueda" class="search-input" type="text" placeholder="Buscar producto..." />
         <button class="login-btn" onclick="filtrar()">Buscar</button>
 
@@ -71,7 +71,7 @@
 
       const filtrados = productos.filter(p => {
         const coincideNombre = p.nombre.toLowerCase().includes(termino);
-        const coincideCategoria = categoria === '' || p.categoria === categoria;
+        const coincideCategoria = categoria === '' || p.categoria.toLowerCase() === categoria.toLowerCase();
         return coincideNombre && coincideCategoria;
       });
 
