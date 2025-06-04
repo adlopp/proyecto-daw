@@ -101,7 +101,7 @@ body {
 }
 
 .register-btn:hover {
-  background-color: #cf6600;
+  background-color: #e77823;
 }
 
 @media (max-width: 768px) {
@@ -255,4 +255,63 @@ body {
   .button-row {
     justify-content: center;
   }
+}
+
+.order-summary {
+  display: flex;
+  justify-content: center;
+  margin-top: 50px;
+  margin-bottom: 50px;
+}
+
+.order-summary-content {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.order-summary-content h3 {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.order-summary-content label {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.order-summary-content input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #bbb;
+  font-size: 14px;
+  background-color: #f9f9f9;
+}
+
+.order-summary-content input[disabled] {
+  background-color: #f9f9f9;
+}
+
+.order-summary-content button {
+  margin-top: 15px;
+  padding: 12px;
+  background-color: #e77823;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.order-summary-content button:hover:enabled {
+  background-color: #cf6600;
 }

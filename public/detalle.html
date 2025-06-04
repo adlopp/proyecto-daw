@@ -12,7 +12,6 @@
     <div class="slogan-wrapper"><div class="slogan" id="bienvenida">Bienvenido</div></div>
     <div class="header-actions">
       <div class="nav-buttons">
-
         <button class="login-btn">Perfil</button>
         <button class="login-btn">Carrito</button>
       </div>
@@ -21,8 +20,8 @@
   </header>
 
   <main>
-    <section class="product-detail" id="detalle-producto">
-    </section>
+    <section class="product-detail" id="detalle-producto"></section>
+    <section class="order-summary" id="resumen-pedido" style="display:none; margin: 30px;"></section>
   </main>
 
   <script>
@@ -35,10 +34,11 @@
       window.location.href = 'index.html';
     }
 
+    let productoActual = null;
+
     async function cargarDetalle() {
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
-
       if (!id) {
         alert('Producto no encontrado');
         window.location.href = 'productos.html';
@@ -48,6 +48,7 @@
       try {
         const res = await fetch(`/api/productos/${id}`);
         const p = await res.json();
+        productoActual = p;
 
         const detalle = document.getElementById('detalle-producto');
         detalle.innerHTML = `
@@ -57,21 +58,107 @@
               <h2>${p.nombre}</h2>
               <p><strong>Precio:</strong> ${p.precio}€</p>
               <p><strong>Stock disponible:</strong> ${p.stock}</p>
-
               <p><strong>Descripción:</strong> ${p.descripcion}</p>
               <label for="cantidad"><strong>Cantidad:</strong></label>
               <input id="cantidad" type="number" min="1" value="1" />
               <br><br>
               <div class="button-row">
-                <button class="register-btn">Realizar pedido</button>
+                <button class="register-btn" onclick="mostrarResumen()">Realizar pedido</button>
                 <button class="register-btn" onclick="window.location.href='productos.html'">Volver atrás</button>
               </div>
+            </div>
           </div>
         `;
       } catch {
         alert('No se pudo cargar el producto');
       }
     }
+
+    async function mostrarResumen() {
+      const cantidad = parseInt(document.getElementById('cantidad').value);
+      if (!productoActual || isNaN(cantidad) || cantidad < 1) {
+        alert('Cantidad no válida');
+        return;
+      }
+
+      if (cantidad > productoActual.stock) {
+        alert('No hay suficiente stock disponible');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/productos/usuario/${usuario}`);
+        const datosUsuario = await res.json();
+
+        const resumen = document.getElementById('resumen-pedido');
+        resumen.style.display = 'flex';
+        resumen.style.justifyContent = 'center';
+
+        const total = (productoActual.precio * cantidad).toFixed(2);
+        const direccion = datosUsuario.direccion?.trim();
+
+        resumen.innerHTML = `
+          <div class="order-summary-content">
+            <h3>Resumen del pedido</h3>
+            <label>Nombre:</label>
+            <input type="text" value="${datosUsuario.nombre}" disabled>
+
+            <label>Correo:</label>
+            <input type="text" value="${datosUsuario.correo}" disabled>
+
+            <label>Dirección:</label>
+            <input type="text" value="${direccion || '⚠️ Rellena tu dirección en el perfil'}" disabled style="color:${direccion ? 'black' : 'red'};">
+
+            <label>Total (${cantidad} producto${cantidad > 1 ? 's' : ''}):</label>
+            <input type="text" value="${total} €" disabled>
+
+            <button class="register-btn" onclick="finalizarPedido()" ${!direccion ? 'disabled' : ''}>Finalizar compra</button>
+          </div>
+        `;
+      } catch {
+        alert('Error al obtener los datos del usuario');
+      }
+    }
+
+    async function finalizarPedido() {
+      const cantidad = parseInt(document.getElementById('cantidad').value);
+      const total = (productoActual.precio * cantidad).toFixed(2);
+
+      try {
+        const resUser = await fetch(`/api/productos/usuario/${usuario}`);
+        const datosUsuario = await resUser.json();
+
+      const pedido = {
+        id_usuario: datosUsuario.id_usuario,
+        id_producto: productoActual.id_producto,
+        cantidad: cantidad,
+        total: total,
+        direccion: datosUsuario.direccion
+      };
+
+
+      const res = await fetch('/api/productos/pedido', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pedido)
+      });
+
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert(`Pedido realizado correctamente. ID: ${data.id_pedido}`);
+          window.location.href = 'productos.html';
+        } else {
+          alert(`Error: ${data.mensaje}`);
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert('Error al finalizar el pedido');
+      }
+    }
+
 
     cargarDetalle();
   </script>
