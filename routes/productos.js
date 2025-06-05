@@ -140,6 +140,18 @@ router.get('/', (req, res) => {
   });
 });
 
+router.get('/pedidos', (req, res) => {
+  console.log("Endpoint /pedidos accedido");
+  db.query('SELECT * FROM pedido ORDER BY fecha DESC', (err, results) => {
+    if (err) {
+      console.error("Error al obtener pedidos:", err.sqlMessage);
+      return res.status(500).json({ mensaje: 'Error al obtener pedidos' });
+    }
+    res.json(results);
+  });
+});
+
+
 // Obtener un producto por ID
 router.get('/:id', (req, res) => {
   const id = req.params.id;
@@ -156,16 +168,6 @@ router.get('/:id', (req, res) => {
     }
 
     res.json(results[0]);
-  });
-});
-
-router.get('/pedidos', (req, res) => {
-  db.query('SELECT * FROM pedido ORDER BY fecha DESC', (err, results) => {
-    if (err) {
-      console.error("Error al obtener pedidos:", err.sqlMessage);
-      return res.status(500).json({ mensaje: 'Error al obtener pedidos' });
-    }
-    res.json(results);
   });
 });
 

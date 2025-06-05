@@ -39,7 +39,7 @@
         const datosUsuario = await resUsuario.json();
         const id_usuario = datosUsuario.id_usuario;
 
-        const resPedidos = await fetch('/api/pedidos');
+        const resPedidos = await fetch('/api/productos/pedidos');
         const pedidos = await resPedidos.json();
 
         const pedidosUsuario = pedidos.filter(p => p.id_usuario === id_usuario);
