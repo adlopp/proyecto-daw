@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Editar perfil</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  
+</head>
+<body>
+  <header class="top-bar">
+    <div class="logo">LOGO</div>
+    <div class="slogan-wrapper"><div class="slogan" id="bienvenida">Bienvenido</div></div>
+    <div class="header-actions">
+      <div class="nav-buttons">
+        <button class="login-btn" onclick="window.location.href='perfil.html'">Perfil</button>
+        <button class="login-btn" onclick="window.location.href='carrito.html'">Carrito</button>
+      </div>
+      <button class="login-btn logout" onclick="logout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="order-summary" style="display: flex; justify-content: center; margin: 50px;">
+      <div class="order-summary-content">
+        <h3 style="text-align:center;">Editar perfil</h3>
+
+        <label>Nombre:</label>
+        <input type="text" id="nombre" />
+
+        <label>Correo:</label>
+        <input type="email" id="correo" />
+
+        <label>Contraseña:</label>
+        <input type="text" id="contrasena" />
+
+
+        <label>Dirección:</label>
+        <input type="text" id="direccion" />
+
+        <label>Número de teléfono:</label>
+        <input type="text" id="telefono" />
+
+        <div class="button-row">
+          <button class="register-btn" onclick="guardarCambios()">Guardar cambios</button>
+          <button class="register-btn" onclick="window.history.back()">Cancelar</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+<script>
+  const usuario = localStorage.getItem('usuario');
+  if (!usuario) window.location.href = 'index.html';
+  document.getElementById('bienvenida').textContent = `Bienvenido, ${usuario}`;
+
+  function logout() {
+    localStorage.removeItem('usuario');
+    window.location.href = 'index.html';
+  }
+
+  /*function togglePasswordVisibility() {
+    const input = document.getElementById('contrasena');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }*/
+
+  async function cargarPerfil() {
+    try {
+      const res = await fetch(`/api/productos/usuario/${usuario}`);
+      const datos = await res.json();
+
+      document.getElementById('nombre').value = datos.nombre;
+      document.getElementById('correo').value = datos.correo;
+      document.getElementById('contrasena').value = datos.contrasena;
+      document.getElementById('direccion').value = datos.direccion;
+      document.getElementById('telefono').value = datos.telefono;
+
+    } catch (err) {
+      console.error("Error al cargar perfil:", err);
+      alert('Error al cargar datos del usuario');
+    }
+  }
+
+  async function guardarCambios() {
+    const nombre = document.getElementById('nombre').value;
+    const correo = document.getElementById('correo').value;
+    const contrasena = document.getElementById('contrasena').value;
+    const direccion = document.getElementById('direccion').value;
+    const telefono = document.getElementById('telefono').value;
+
+    let id_usuario;
+    try {
+      const resUser = await fetch(`/api/productos/usuario/${usuario}`);
+      const datosUser = await resUser.json();
+      id_usuario = datosUser.id_usuario;
+
+    } catch (err) {
+      console.error("Error al obtener datos del usuario:", err);
+      alert('Error al obtener datos del usuario');
+      return;
+    }
+
+    const cuerpo = { nombre, correo, contrasena, direccion, telefono };
+
+    try {
+      const res = await fetch(`/api/productos/actualizar-usuario/${id_usuario}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cuerpo)
+      });
+
+      const resultado = await res.json();
+
+      if (res.ok) {
+        alert('Perfil actualizado correctamente');
+        localStorage.setItem('usuario', nombre);
+        window.location.href = 'productos.html';
+      } else {
+        alert(`Error: ${resultado.mensaje}`);
+      }
+
+    } catch (err) {
+      console.error("Error al guardar los cambios:", err);
+      alert('Error al guardar los cambios');
+    }
+  }
+
+  cargarPerfil();
+</script>
+
+</body>
+</html>

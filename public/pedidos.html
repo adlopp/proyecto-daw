@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Historial de Pedidos</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="logo">LOGO</div>
+    <div class="slogan-wrapper"><div class="slogan" id="bienvenida">Bienvenido</div></div>
+    <div class="header-actions">
+      <div class="nav-buttons">
+        <button class="login-btn" onclick="window.location.href='productos.html'">Productos</button>
+        <button class="login-btn" onclick="window.location.href='perfil.html'">Perfil</button>
+      </div>
+      <button class="login-btn logout" onclick="logout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="product-grid" id="lista-pedidos"></section>
+  </main>
+
+  <script>
+    const usuario = localStorage.getItem('usuario');
+    if (!usuario) window.location.href = 'index.html';
+    document.getElementById('bienvenida').textContent = `Bienvenido, ${usuario}`;
+
+    function logout() {
+      localStorage.removeItem('usuario');
+      window.location.href = 'index.html';
+    }
+
+    async function cargarPedidos() {
+      try {
+        const resUsuario = await fetch(`/api/productos/usuario/${usuario}`);
+        const datosUsuario = await resUsuario.json();
+        const id_usuario = datosUsuario.id_usuario;
+
+        const resPedidos = await fetch('/api/pedidos');
+        const pedidos = await resPedidos.json();
+
+        const pedidosUsuario = pedidos.filter(p => p.id_usuario === id_usuario);
+        const contenedor = document.getElementById('lista-pedidos');
+        contenedor.innerHTML = '';
+
+        for (const pedido of pedidosUsuario) {
+          const resProducto = await fetch(`/api/productos/${pedido.id_producto}`);
+          const producto = await resProducto.json();
+
+          const tarjeta = document.createElement('div');
+          tarjeta.className = 'product-card';
+          tarjeta.innerHTML = `
+            <img src="${producto.imagen}" alt="${producto.nombre}" />
+            <p><strong>Pedido #${pedido.id_pedido}</strong></p>
+            <p><strong>Producto:</strong> ${producto.nombre}</p>
+            <p><strong>Cantidad:</strong> ${pedido.cantidad}</p>
+            <p><strong>Total:</strong> ${pedido.total} €</p>
+            <p><strong>Dirección:</strong> ${pedido.direccion}</p>
+            <p><strong>Fecha:</strong> ${pedido.fecha}</p>
+          `;
+          contenedor.appendChild(tarjeta);
+        }
+
+      } catch (err) {
+        console.error('Error al cargar los pedidos:', err);
+        alert('No se pudieron cargar los pedidos.');
+      }
+    }
+
+    cargarPedidos();
+  </script>
+</body>
+</html>
