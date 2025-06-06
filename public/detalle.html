@@ -8,12 +8,15 @@
 </head>
 <body>
   <header class="top-bar">
-    <div class="logo">LOGO</div>
-    <div class="slogan-wrapper"><div class="slogan" id="bienvenida">Bienvenido</div></div>
+  <div class="logo">
+    <img src="/img/logo.png" alt="Logo" />
+    </div>    <div class="slogan-wrapper">
+      <div class="slogan" id="bienvenida">Bienvenido</div>
+    </div>
     <div class="header-actions">
       <div class="nav-buttons">
         <button class="login-btn" onclick="window.location.href='perfil.html'">Perfil</button>
-        <button class="login-btn">Carrito</button>
+        <button class="login-btn">Pedidos</button>
       </div>
       <button class="login-btn logout" onclick="logout()">Cerrar sesión</button>
     </div>
@@ -22,12 +25,27 @@
   <main>
     <section class="product-detail" id="detalle-producto"></section>
     <section class="order-summary" id="resumen-pedido" style="display:none; margin: 30px;"></section>
+    <section class="order-summary" id="formulario-edicion" style="display:none; margin: 30px;"></section>
   </main>
 
   <script>
     const usuario = localStorage.getItem('usuario');
     if (!usuario) window.location.href = 'index.html';
-    document.getElementById('bienvenida').textContent = `Bienvenido, ${usuario}`;
+
+    if (usuario.toLowerCase() === 'admin') {
+      document.getElementById('bienvenida').textContent = 'MODO ADMINISTRADOR';
+
+      const botones = document.querySelectorAll('.nav-buttons button');
+      botones.forEach(btn => {
+        if (btn.textContent === 'Perfil' || btn.textContent === 'Pedidos') {
+          btn.disabled = true;
+          btn.style.opacity = 0.5;
+          btn.title = 'No disponible en modo administrador';
+        }
+      });
+    } else {
+      document.getElementById('bienvenida').textContent = `Bienvenido, ${usuario}`;
+    }
 
     function logout() {
       localStorage.removeItem('usuario');
@@ -63,7 +81,13 @@
               <input id="cantidad" type="number" min="1" value="1" />
               <br><br>
               <div class="button-row">
-                <button class="register-btn" onclick="mostrarResumen()">Realizar pedido</button>
+                  ${usuario.toLowerCase() === 'admin'
+                    ? `
+                      <button class="register-btn" onclick="mostrarFormularioEdicion()">Editar producto</button>
+                      <button class="register-btn" onclick="eliminarProducto()">Eliminar producto</button>
+                      `
+                    : `<button class="register-btn" onclick="mostrarResumen()">Realizar pedido</button>`
+                  }
                 <button class="register-btn" onclick="window.location.href='productos.html'">Volver atrás</button>
               </div>
             </div>
@@ -102,17 +126,13 @@
             <h3>Resumen del pedido</h3>
             <label>Nombre:</label>
             <input type="text" value="${datosUsuario.nombre}" disabled>
-
             <label>Correo:</label>
-            <input type="text" value="${datosUsuario.correo}" disabled>
-
+            <input type="text" value="${datosUsuario.correo?.trim() || 'Rellena tu correo en el perfil'}" disabled style="color:${datosUsuario.correo?.trim() ? 'black' : 'red'};">
             <label>Dirección:</label>
-            <input type="text" value="${direccion || '⚠️ Rellena tu dirección en el perfil'}" disabled style="color:${direccion ? 'black' : 'red'};">
-
+            <input type="text" value="${direccion || 'Rellena tu dirección en el perfil'}" disabled style="color:${direccion ? 'black' : 'red'};">
             <label>Total (${cantidad} producto${cantidad > 1 ? 's' : ''}):</label>
             <input type="text" value="${total} €" disabled>
-
-            <button class="register-btn" onclick="finalizarPedido()" ${!direccion ? 'disabled' : ''}>Finalizar compra</button>
+            <button class="register-btn" onclick="finalizarPedido()" ${!direccion || !datosUsuario.correo?.trim() ? 'disabled' : ''}>Finalizar compra</button>
           </div>
         `;
       } catch {
@@ -128,26 +148,24 @@
         const resUser = await fetch(`/api/productos/usuario/${usuario}`);
         const datosUsuario = await resUser.json();
 
-      const pedido = {
-        id_usuario: datosUsuario.id_usuario,
-        id_producto: productoActual.id_producto,
-        cantidad: cantidad,
-        total: total,
-        direccion: datosUsuario.direccion
-      };
+        const pedido = {
+          id_usuario: datosUsuario.id_usuario,
+          id_producto: productoActual.id_producto,
+          cantidad: cantidad,
+          total: total,
+          direccion: datosUsuario.direccion
+        };
 
-
-      const res = await fetch('/api/productos/pedido', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pedido)
-      });
-
+        const res = await fetch('/api/productos/pedido', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(pedido)
+        });
 
         const data = await res.json();
 
         if (res.ok) {
-          alert(`Pedido realizado correctamente. ID: ${data.id_pedido}`);
+          alert(`Pedido realizado correctamente.`);
           window.location.href = 'productos.html';
         } else {
           alert(`Error: ${data.mensaje}`);
@@ -158,6 +176,103 @@
         alert('Error al finalizar el pedido');
       }
     }
+
+    function mostrarFormularioEdicion() {
+      const contenedor = document.getElementById('formulario-edicion');
+      contenedor.style.display = 'flex';
+      contenedor.style.justifyContent = 'center';
+
+      contenedor.innerHTML = `
+        <div class="order-summary-content">
+          <h3>Editar producto</h3>
+          <label>Nombre:</label>
+          <input type="text" id="editar-nombre" value="${productoActual.nombre}" />
+          <label>Precio (€):</label>
+          <input type="number" id="editar-precio" value="${productoActual.precio}" step="0.01" min="0" />
+          <label>Stock:</label>
+          <input type="number" id="editar-stock" value="${productoActual.stock}" min="0" />
+          <label>Descripción:</label>
+          <textarea id="editar-descripcion">${productoActual.descripcion}</textarea>
+          <label>Categoría:</label>
+          <select id="editar-categoria">
+            <option value="Consolas" ${productoActual.categoria === 'Consolas' ? 'selected' : ''}>Consolas</option>
+            <option value="Monitores" ${productoActual.categoria === 'Monitores' ? 'selected' : ''}>Monitores</option>
+            <option value="Graficas" ${productoActual.categoria === 'Graficas' ? 'selected' : ''}>Gráficas</option>
+          </select>
+          <label>Imagen (opcional):</label>
+          <input type="file" id="editar-imagen" accept="image/*" />
+          <button class="register-btn" onclick="confirmarEdicionProducto()">Confirmar cambios del producto</button>
+        </div>
+      `;
+    }
+
+
+  async function confirmarEdicionProducto() {
+    const nombre = document.getElementById('editar-nombre').value.trim();
+    const precio = parseFloat(document.getElementById('editar-precio').value);
+    const stock = parseInt(document.getElementById('editar-stock').value);
+    const descripcion = document.getElementById('editar-descripcion').value.trim();
+    const categoria = document.getElementById('editar-categoria').value;
+    const imagenInput = document.getElementById('editar-imagen');
+
+    if (!nombre || isNaN(precio) || isNaN(stock)) {
+      alert('Por favor completa todos los campos válidamente.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('nombre', nombre);
+    formData.append('precio', precio);
+    formData.append('stock', stock);
+    formData.append('descripcion', descripcion);
+    formData.append('categoria', categoria);
+
+    if (imagenInput.files.length > 0) {
+      formData.append('imagen', imagenInput.files[0]);
+    }
+
+    try {
+      const res = await fetch(`/api/productos/editar/${productoActual.id_producto}`, {
+        method: 'PUT',
+        body: formData
+      });
+
+      const resultado = await res.json();
+
+      if (res.ok) {
+        alert('Producto actualizado correctamente.');
+        window.location.reload();
+      } else {
+        alert(`Error: ${resultado.mensaje}`);
+      }
+    } catch (err) {
+      console.error("Error al actualizar producto:", err);
+      alert('No se pudo actualizar el producto.');
+    }
+  }
+
+    async function eliminarProducto() {
+    const confirmar = confirm("¿Estás seguro de que deseas eliminar este producto?");
+    if (!confirmar) return;
+
+    try {
+      const res = await fetch(`/api/productos/${productoActual.id_producto}`, {
+        method: 'DELETE'
+      });
+
+      const resultado = await res.json();
+
+      if (res.ok) {
+        alert('Producto eliminado correctamente.');
+        window.location.href = 'productos.html';
+      } else {
+        alert(`Error al eliminar: ${resultado.mensaje}`);
+      }
+    } catch (err) {
+      console.error("Error al eliminar producto:", err);
+      alert('No se pudo eliminar el producto.');
+    }
+  }
 
 
     cargarDetalle();

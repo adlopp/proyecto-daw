@@ -1,12 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const multer = require('multer');
+//const multer = require('multer');
+
+const path = require('path');
+
+// LLKa configuracion de multer
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/img'); // carpeta donde se guardan las imágenes
+  },
+  filename: function (req, file, cb) {
+    const nombreUnico = Date.now() + '-' + file.originalname;
+    cb(null, nombreUnico);
+  }
+
+});
+const upload = multer({ storage });
 
 // Obtener usuario por nombre
 router.get('/usuario/:nombre', (req, res) => {
   const nombre = req.params.nombre;
   const sql = 'SELECT * FROM usuarios WHERE nombre = ?';
-
   db.query(sql, [nombre], (err, results) => {
     if (err) {
       console.error(err);
@@ -21,30 +38,76 @@ router.get('/usuario/:nombre', (req, res) => {
   });
 });
 
-router.post('/validar-cambios', (req, res) => {
-  const { id_usuario, nombre, correo, telefono } = req.body;
-
-  console.log("Validando usuario:", req.body); // <--- AÑADE ESTO
+router.put('/productos/:id', (req, res) => {
+  const { nombre, precio, stock, descripcion } = req.body;
+  const id = req.params.id;
 
   const sql = `
-    SELECT * FROM usuarios 
-    WHERE (nombre = ? OR correo = ? OR telefono = ?) 
-    AND id_usuario != ?
+    UPDATE productos SET nombre = ?, precio = ?, stock = ?, descripcion = ? 
+    WHERE id_producto = ?
   `;
+  db.query(sql, [nombre, precio, stock, descripcion, id], (err) => {
+    if (err) {
+      console.error("Error al actualizar producto:", err.sqlMessage);
+      return res.status(500).json({ mensaje: 'Error al actualizar producto' });
+    }
 
-  db.query(sql, [nombre, correo, telefono, id_usuario], (err, results) => {
+    res.json({ mensaje: 'Producto actualizado correctamente' });
+  });
+});
+
+router.post('/validar-cambios', (req, res) => {
+  const { id_usuario, nombre, correo, telefono } = req.body;
+  let condiciones = [];
+  let valores = [];
+
+  if (nombre?.trim()) {
+    condiciones.push('(nombre = ? AND id_usuario != ?)');
+    valores.push(nombre.trim(), id_usuario);
+  }
+  if (correo?.trim()) {
+    condiciones.push('(correo = ? AND id_usuario != ?)');
+    valores.push(correo.trim(), id_usuario);
+  }
+  if (telefono?.trim()) {
+    condiciones.push('(telefono = ? AND id_usuario != ?)');
+    valores.push(telefono.trim(), id_usuario);
+  }
+  if (condiciones.length === 0) {
+    return res.json({ mensaje: 'Datos válidos' }); // Nada que validar
+  }
+
+  const sql = `
+    SELECT nombre, correo, telefono FROM usuarios 
+    WHERE ${condiciones.join(' OR ')}
+  `;
+  db.query(sql, valores, (err, results) => {
     if (err) {
       console.error("Error en validación:", err.sqlMessage);
       return res.status(500).json({ mensaje: 'Error al validar los datos' });
     }
 
     if (results.length > 0) {
-      return res.status(409).json({ mensaje: 'Nombre, correo o teléfono ya en uso' });
+      let conflictos = [];
+
+      results.forEach(row => {
+        if (row.nombre === nombre) conflictos.push('nombre');
+        if (row.correo === correo) conflictos.push('correo');
+        if (row.telefono === telefono) conflictos.push('teléfono');
+      });
+
+      const camposDuplicados = [...new Set(conflictos)].join(', ');
+     
+      return res.status(409).json({ mensaje: `Los siguientes campos ya están en uso: ${camposDuplicados}` });
     }
+
+
 
     res.json({ mensaje: 'Datos válidos' });
   });
 });
+
+
 
 
 // Actualizar datos del usuario desde el perfil
@@ -151,6 +214,41 @@ router.get('/pedidos', (req, res) => {
   });
 });
 
+// Actualizar producto por ID (modo administrador)
+router.put('/editar/:id', upload.single('imagen'), (req, res) => {
+  const id = req.params.id;
+  const { nombre, precio, stock, descripcion, categoria } = req.body;
+  const imagen = req.file ? `img/${req.file.filename}` : null; // guardar la ruta si hay imagen
+
+  if (!nombre || precio == null || stock == null) {
+    return res.status(400).json({ mensaje: 'Faltan datos obligatorios' });
+  }
+
+  const campos = [nombre, precio, stock, descripcion, categoria];
+  let sql = `
+    UPDATE productos 
+    SET nombre = ?, precio = ?, stock = ?, descripcion = ?, categoria = ?
+  `;
+
+  if (imagen) {
+    sql += `, imagen = ?`;
+    campos.push(imagen);
+  }
+
+  sql += ` WHERE id_producto = ?`;
+  campos.push(id);
+
+  db.query(sql, campos, (err) => {
+    if (err) {
+      console.error('Error al actualizar producto:', err.sqlMessage);
+      return res.status(500).json({ mensaje: 'Error al actualizar producto' });
+    }
+
+    res.json({ mensaje: 'Producto actualizado correctamente' });
+  });
+});
+
+
 
 // Obtener un producto por ID
 router.get('/:id', (req, res) => {
@@ -170,5 +268,56 @@ router.get('/:id', (req, res) => {
     res.json(results[0]);
   });
 });
+
+// Crear nuevo producto
+router.post('/', (req, res) => {
+  const { nombre, precio, stock, descripcion, imagen, categoria } = req.body;
+
+  if (!nombre || precio == null || stock == null) {
+    return res.status(400).json({ mensaje: 'Faltan datos obligatorios para crear el producto' });
+  }
+
+  const sql = `
+    INSERT INTO productos (nombre, precio, stock, descripcion, imagen, categoria)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  const valores = [
+    nombre,
+    precio,
+    stock,
+    descripcion || 'Sin descripción',
+    imagen || 'img/default.png',
+    categoria || 'Otro'
+  ];
+
+  db.query(sql, valores, (err, result) => {
+    if (err) {
+      console.error('Error al crear producto:', err.sqlMessage);
+      return res.status(500).json({ mensaje: 'Error al crear producto' });
+    }
+
+    res.status(201).json({ mensaje: 'Producto creado correctamente', id: result.insertId });
+  });
+});
+
+router.delete('/:id', (req, res) => {
+  const id = req.params.id;
+  const sql = 'DELETE FROM productos WHERE id_producto = ?';
+
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error('Error al eliminar producto:', err.sqlMessage);
+      return res.status(500).json({ mensaje: 'Error al eliminar producto' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ mensaje: 'Producto no encontrado' });
+    }
+
+    res.json({ mensaje: 'Producto eliminado correctamente' });
+  });
+});
+
 
 module.exports = router;

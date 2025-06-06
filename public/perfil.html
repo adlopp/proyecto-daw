@@ -9,8 +9,11 @@
 </head>
 <body>
   <header class="top-bar">
-    <div class="logo">LOGO</div>
-    <div class="slogan-wrapper"><div class="slogan" id="bienvenida">Bienvenido</div></div>
+  <div class="logo">
+    <img src="/img/logo.png" alt="Logo" />
+    </div>    <div class="slogan-wrapper">
+      <div class="slogan" id="bienvenida">Bienvenido</div>
+    </div>
     <div class="header-actions">
       <div class="nav-buttons">
         <button class="login-btn" onclick="window.location.href='perfil.html'">Perfil</button>
@@ -99,6 +102,25 @@
       alert('Error al obtener datos del usuario');
       return;
     }
+
+      try {
+    const resValidacion = await fetch('/api/productos/validar-cambios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_usuario, nombre, correo, telefono })
+    });
+
+    if (!resValidacion.ok) {
+      const error = await resValidacion.json();
+      alert(error.mensaje);
+      return;
+    }
+
+  } catch (err) {
+    console.error("Error al validar datos:", err);
+    alert('Error al validar los datos');
+    return;
+  }
 
     const cuerpo = { nombre, correo, contrasena, direccion, telefono };
 

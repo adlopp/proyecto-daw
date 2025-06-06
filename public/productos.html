@@ -8,14 +8,14 @@
 </head>
 <body>
   <header class="top-bar">
-    <div class="logo">LOGO</div>
-    <div class="slogan-wrapper">
+  <div class="logo">
+    <img src="/img/logo.png" alt="Logo" />
+    </div>    <div class="slogan-wrapper">
       <div class="slogan" id="bienvenida">Bienvenido</div>
     </div>
 
     <div class="header-actions">
       <div class="nav-buttons">
-
         <select id="categoria-select" class="login-btn">
           <option value="">Todas</option>
           <option value="Consolas">Consolas</option>
@@ -23,12 +23,11 @@
           <option value="Graficas">Gráficas</option>
         </select>
 
-
         <input id="busqueda" class="search-input" type="text" placeholder="Buscar producto..." />
         <button class="login-btn" onclick="filtrar()">Buscar</button>
 
-          <button class="login-btn" onclick="window.location.href='perfil.html'">Perfil</button>
-          <button class="login-btn" onclick="window.location.href='pedidos.html'">Pedidos</button>
+        <button class="login-btn" id="btn-perfil" onclick="window.location.href='perfil.html'">Perfil</button>
+        <button class="login-btn" id="btn-pedidos">Pedidos</button>
       </div>
       <button class="login-btn logout" onclick="logout()">Cerrar sesión</button>
     </div>
@@ -40,10 +39,67 @@
 
   <script>
     const nombreUsuario = localStorage.getItem('usuario');
+
     if (!nombreUsuario) {
       window.location.href = 'index.html';
+    } else if (nombreUsuario.toLowerCase() === 'admin') {
+      document.getElementById('bienvenida').textContent = 'MODO ADMINISTRADOR';
+
+      const btnPerfil = document.getElementById('btn-perfil');
+      const btnPedidos = document.getElementById('btn-pedidos');
+
+      // Deshabilitar botón de perfil
+      if (btnPerfil) {
+        btnPerfil.disabled = true;
+        btnPerfil.style.opacity = 0.5;
+        btnPerfil.title = 'No disponible en modo administrador';
+      }
+
+      // Cambiar botón "Pedidos" por "Añadir producto" cuando sea adminnnnn
+      if (btnPedidos) {
+        btnPedidos.disabled = false;
+        btnPedidos.textContent = 'Añadir producto';
+        btnPedidos.title = 'Crear un nuevo producto';
+        btnPedidos.onclick = async () => {
+          try {
+            const nuevo = {
+              nombre: 'Nuevo producto',
+              precio: 99,
+              stock: -1,
+              descripcion: 'Producto sin descripcion',
+              imagen: 'img/default.png',
+              categoria: 'Otro'
+            };
+
+            const res = await fetch('/api/productos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(nuevo)
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+              alert('Producto creado correctamente');
+              filtrar(); // Recargar productos
+            } else {
+              alert('Error al crear producto: ' + data.mensaje);
+            }
+          } catch (err) {
+            alert('Error al conectar con el servidor');
+            console.error(err);
+          }
+        };
+      }
     } else {
       document.getElementById('bienvenida').textContent = `Bienvenido, ${nombreUsuario}`;
+
+      const btnPedidos = document.getElementById('btn-pedidos');
+      if (btnPedidos) {
+        btnPedidos.title = 'Ver historial de pedidos';
+        btnPedidos.onclick = () => {
+          window.location.href = 'pedidos.html';
+        };
+      }
     }
 
     function logout() {
@@ -68,10 +124,9 @@
       const productos = await cargarProductos();
       const contenedor = document.getElementById('product-list');
       contenedor.innerHTML = '';
-
       const filtrados = productos.filter(p => {
         const coincideNombre = p.nombre.toLowerCase().includes(termino);
-        const coincideCategoria = categoria === '' || p.categoria.toLowerCase() === categoria.toLowerCase();
+        const coincideCategoria = categoria === '' || p.categoria?.toLowerCase() === categoria.toLowerCase();
         return coincideNombre && coincideCategoria;
       });
 
@@ -102,8 +157,8 @@
       });
     }
 
-    // Cargar todos los productos al iniciar
-    filtrar();
-  </script>
+    filtrar(); // Cargar al iniciar
+
+  </script> 
 </body>
 </html>

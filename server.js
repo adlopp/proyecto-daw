@@ -43,7 +43,7 @@ app.post('/register', (req, res) => {
       return res.status(409).json({ mensaje: 'El nombre de usuario ya está en uso' });
     }
 
-    const correo = `${usuario}@gmail.com`;
+    const correo = null;
 
     db.query(
       'INSERT INTO usuarios (nombre, correo, contrasena, direccion, telefono, fecha_registro) VALUES (?, ?, ?, ?, ?, NOW())',
